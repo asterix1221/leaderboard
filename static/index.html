@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Leaderboard System</title>
+    <style>
+        /* Основные стили - тёмная тема */
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --accent: #7c3aed;
+            --accent-hover: #6d28d9;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --gold: #ffd700;
+            --silver: #c0c0c0;
+            --bronze: #cd7f32;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Заголовок */
+        header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Навигация вкладками */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-card);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Контент вкладок */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Карточки */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        /* Формы */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-secondary);
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        button.submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button.submit-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Сообщения */
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--error);
+            display: block;
+        }
+
+        /* Таблица лидерборда */
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        .leaderboard-table th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .leaderboard-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .rank-1 {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .rank-2 {
+            color: var(--silver);
+            font-weight: bold;
+        }
+
+        .rank-3 {
+            color: var(--bronze);
+            font-weight: bold;
+        }
+
+        /* Сетка игр */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .game-card {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .game-card h3 {
+            margin-bottom: 8px;
+        }
+
+        .game-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Кнопка обновления */
+        .refresh-btn {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+            }
+
+            .leaderboard-table {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Game Leaderboard System</h1>
+            <p class="subtitle">Система лидербордов для игр</p>
+        </header>
+
+        <!-- Навигация вкладками -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="leaderboard">Лидерборд</button>
+            <button class="tab-btn" data-tab="submit-score">Отправить результат</button>
+            <button class="tab-btn" data-tab="register">Регистрация игрока</button>
+            <button class="tab-btn" data-tab="games">Управление играми</button>
+        </div>
+
+        <!-- Вкладка: Лидерборд -->
+        <div id="leaderboard" class="tab-content active">
+            <div class="card">
+                <h2>Таблица лидеров</h2>
+                <div class="form-group">
+                    <label for="game-select">Выберите игру:</label>
+                    <select id="game-select">
+                        <option value="">Загрузка...</option>
+                    </select>
+                </div>
+                <button class="refresh-btn" onclick="loadLeaderboard()">🔄 Обновить</button>
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>#Место</th>
+                            <th>🏆 Игрок</th>
+                            <th>Очки</th>
+                            <th>Дата рекорда</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-secondary);">
+                                Выберите игру для просмотра лидерборда
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка: Отправить результат -->
+        <div id="submit-score" class="tab-content">
+            <div class="card">
+                <h2>Отправить результат</h2>
+                <div class="form-group">
+                    <label for="score-player">Игрок:</label>
+                    <select id="score-player">
+                        <option value="">Загрузка...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="score-game">Игра:</label>
+                    <select id="score-game">
+                        <option value="">Загрузка...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="score-value">Очки:</label>
+                    <input type="number" id="score-value" min="0" placeholder="Введите количество очков">
+                </div>
+                <button class="submit-btn" onclick="submitScore()">Отправить</button>
+                <div id="score-message" class="message"></div>
+            </div>
+        </div>
+
+        <!-- Вкладка: Регистрация игрока -->
+        <div id="register" class="tab-content">
+            <div class="card">
+                <h2>Регистрация игрока</h2>
+                <div class="form-group">
+                    <label for="username">Имя пользователя:</label>
+                    <input type="text" id="username" maxlength="50" placeholder="Введите имя игрока">
+                </div>
+                <button class="submit-btn" onclick="registerPlayer()">Зарегистрировать</button>
+                <div id="register-message" class="message"></div>
+            </div>
+        </div>
+
+        <!-- Вкладка: Управление играми -->
+        <div id="games" class="tab-content">
+            <div class="card">
+                <h2>Добавить игру</h2>
+                <div class="form-group">
+                    <label for="game-name">Название игры:</label>
+                    <input type="text" id="game-name" maxlength="100" placeholder="Введите название игры">
+                </div>
+                <div class="form-group">
+                    <label for="game-desc">Описание:</label>
+                    <input type="text" id="game-desc" placeholder="Введите описание игры">
+                </div>
+                <button class="submit-btn" onclick="createGame()">Добавить игру</button>
+                <div id="game-message" class="message"></div>
+            </div>
+            <div class="card">
+                <h2>Существующие игры</h2>
+                <div id="games-list" class="games-grid">
+                    <p style="color: var(--text-secondary);">Загрузка...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Переменные для хранения данных
+        let games = [];
+        let players = [];
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            initTabs();
+            loadGames();
+            loadPlayers();
+        });
+
+        // Переключение вкладок
+        function initTabs() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Убираем активный класс со всех кнопок
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    // Добавляем активный класс нажатой кнопке
+                    btn.classList.add('active');
+
+                    // Скрываем все вкладки
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+
+                    // Показываем нужную вкладку
+                    const tabId = btn.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+
+        // Загрузка списка игр
+        async function loadGames() {
+            try {
+                const response = await fetch('/api/games');
+                games = await response.json();
+
+                // Обновляем select в лидерборде
+                const gameSelect = document.getElementById('game-select');
+                gameSelect.innerHTML = '<option value="">Выберите игру</option>';
+                games.forEach(game => {
+                    gameSelect.innerHTML += `<option value="${game.id}">${game.name}</option>`;
+                });
+
+                // Обновляем select в форме отправки результата
+                const scoreGameSelect = document.getElementById('score-game');
+                scoreGameSelect.innerHTML = '<option value="">Выберите игру</option>';
+                games.forEach(game => {
+                    scoreGameSelect.innerHTML += `<option value="${game.id}">${game.name}</option>`;
+                });
+
+                // Обновляем список игр
+                renderGamesList();
+            } catch (error) {
+                console.error('Ошибка загрузки игр:', error);
+            }
+        }
+
+        // Загрузка списка игроков через правильный API-эндпоинт
+        async function loadPlayers() {
+            try {
+                const response = await fetch('/api/players');
+                if (response.ok) {
+                    players = await response.json();
+                } else {
+                    players = [];
+                }
+
+                // Обновляем select в форме отправки результата
+                const playerSelect = document.getElementById('score-player');
+                playerSelect.innerHTML = '<option value="">Выберите игрока</option>';
+                players.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.username;
+                    playerSelect.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Ошибка загрузки игроков:', error);
+                players = [];
+            }
+        }
+
+        // Загрузка лидерборда
+        async function loadLeaderboard() {
+            const gameId = document.getElementById('game-select').value;
+            const tbody = document.getElementById('leaderboard-body');
+
+            if (!gameId) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Выберите игру для просмотра лидерборда</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/leaderboard/${gameId}?limit=10`);
+                const data = await response.json();
+
+                if (data.entries.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Нет результатов для этой игры</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                data.entries.forEach(entry => {
+                    const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : '';
+                    const date = entry.achieved_at ? new Date(entry.achieved_at).toLocaleDateString() : '-';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="${rankClass}">${entry.rank}</td>
+                            <td>${entry.username}</td>
+                            <td>${entry.value}</td>
+                            <td>${date}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки лидерборда:', error);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--error);">Ошибка загрузки данных</td></tr>';
+            }
+        }
+
+        // Отправка результата
+        async function submitScore() {
+            const playerId = document.getElementById('score-player').value;
+            const gameId = document.getElementById('score-game').value;
+            const value = document.getElementById('score-value').value;
+            const messageEl = document.getElementById('score-message');
+
+            if (!playerId || !gameId || !value) {
+                showMessage(messageEl, 'error', 'Заполните все поля');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/scores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        player_id: parseInt(playerId),
+                        game_id: parseInt(gameId),
+                        value: parseInt(value)
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage(messageEl, 'success', 'Результат успешно отправлен!');
+                    document.getElementById('score-value').value = '';
+                } else {
+                    const error = await response.json();
+                    showMessage(messageEl, 'error', error.detail || 'Ошибка при отправке');
+                }
+            } catch (error) {
+                showMessage(messageEl, 'error', 'Ошибка соединения с сервером');
+            }
+        }
+
+        // Регистрация игрока
+        async function registerPlayer() {
+            const username = document.getElementById('username').value.trim();
+            const messageEl = document.getElementById('register-message');
+
+            if (!username) {
+                showMessage(messageEl, 'error', 'Введите имя пользователя');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/players', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+
+                if (response.ok) {
+                    const player = await response.json();
+                    showMessage(messageEl, 'success', `Игрок ${player.username} успешно зарегистрирован!`);
+                    document.getElementById('username').value = '';
+                    loadPlayers();
+                } else {
+                    const error = await response.json();
+                    showMessage(messageEl, 'error', error.detail || 'Ошибка при регистрации');
+                }
+            } catch (error) {
+                showMessage(messageEl, 'error', 'Ошибка соединения с сервером');
+            }
+        }
+
+        // Создание игры
+        async function createGame() {
+            const name = document.getElementById('game-name').value.trim();
+            const description = document.getElementById('game-desc').value.trim();
+            const messageEl = document.getElementById('game-message');
+
+            if (!name) {
+                showMessage(messageEl, 'error', 'Введите название игры');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/games', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, description })
+                });
+
+                if (response.ok) {
+                    const game = await response.json();
+                    showMessage(messageEl, 'success', `Игра ${game.name} успешно создана!`);
+                    document.getElementById('game-name').value = '';
+                    document.getElementById('game-desc').value = '';
+                    loadGames();
+                } else {
+                    const error = await response.json();
+                    showMessage(messageEl, 'error', error.detail || 'Ошибка при создании игры');
+                }
+            } catch (error) {
+                showMessage(messageEl, 'error', 'Ошибка соединения с сервером');
+            }
+        }
+
+        // Отображение списка игр
+        function renderGamesList() {
+            const container = document.getElementById('games-list');
+            
+            if (games.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">Нет созданных игр</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            games.forEach(game => {
+                container.innerHTML += `
+                    <div class="game-card">
+                        <h3>${game.name}</h3>
+                        <p>${game.description || 'Без описания'}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Вспомогательная функция для показа сообщений
+        function showMessage(element, type, text) {
+            element.className = `message ${type}`;
+            element.textContent = text;
+        }
+
+        // Обработчик изменения выбора игры в лидерборде
+        document.getElementById('game-select').addEventListener('change', loadLeaderboard);
+    </script>
+</body>
+</html>
