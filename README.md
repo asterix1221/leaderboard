@@ -30,6 +30,7 @@
 leaderboard/
 ├── main.py                           # Точка входа
 ├── requirements.txt                  # Зависимости
+├── pytest.ini                        # Конфигурация pytest
 ├── leaderboard.db                    # SQLite база данных
 │
 ├── entities/                         # Бизнес-сущности
@@ -40,6 +41,7 @@ leaderboard/
 ├── use_cases/                       # Сценарии использования
 │   ├── player_use_cases.py
 │   ├── score_use_cases.py
+│   ├── game_use_cases.py
 │   └── leaderboard_use_cases.py
 │
 ├── adapters/                        # Адаптеры
@@ -55,8 +57,32 @@ leaderboard/
 │   ├── models/                       # SQLAlchemy модели
 │   └── repositories/                 # CRUD операции
 │
-└── static/
-    └── index.html                    # Клиентский интерфейс
+├── static/
+│   └── index.html                    # Клиентский интерфейс
+│
+└── tests/                           # Тесты
+    ├── conftest.py                   # Pytest фикстуры
+    ├── entities/                    # Тесты сущностей
+    │   ├── test_player.py
+    │   ├── test_game.py
+    │   └── test_score.py
+    ├── use_cases/                   # Тесты бизнес-логики
+    │   ├── test_player_use_cases.py
+    │   ├── test_game_use_cases.py
+    │   ├── test_score_use_cases.py
+    │   └── test_leaderboard_use_cases.py
+    ├── adapters/controllers/         # Тесты API
+    │   ├── test_player_controller.py
+    │   ├── test_game_controller.py
+    │   ├── test_score_controller.py
+    │   └── test_leaderboard_controller.py
+    └── infrastructure/               # Тесты инфраструктуры
+        ├── test_database.py
+        ├── test_startup.py
+        └── repositories/
+            ├── test_player_repository.py
+            ├── test_game_repository.py
+            └── test_score_repository.py
 ```
 
 ## Установка
@@ -90,76 +116,44 @@ python main.py
 
 Приложение будет доступно по адресу: **<http://localhost:8000>**
 
-## REST API
+## Тестирование
 
-### Игроки
+Проект включает комплексный набор тестов, покрывающих все слои приложения:
 
-- `POST /api/players` — Регистрация нового игрока
-- `GET /api/players/{id}` — Получение профиля игрока
-
-### Игры
-
-- `POST /api/games` — Создание новой игры
-- `GET /api/games` — Получение списка всех игр
-
-### Результаты
-
-- `POST /api/scores` — Отправка результата игры
-- `GET /api/scores/player/{player_id}` — Получение всех результатов игрока
-
-### Лидерборд
-
-- `GET /api/leaderboard/{game_id}` — Получение топ-10 игроков для игры
-- `GET /api/leaderboard/{game_id}?limit=N` — Получение топ-N игроков
-
-## Тестовые данные
-
-При первом запуске автоматически создаются:
-
-- 3 игры: "Space Shooter", "Puzzle Master", "Racing Pro"
-- 5 игроков: player1–player5
-- Случайные результаты для демонстрации лидерборда
-
-## Клиентский интерфейс
-
-Веб-интерфейс доступен по адресу `/static/index.html` и включает:
-
-- **Лидерборд** — просмотр таблицы лидеров с выбором игры
-- **Отправить результат** — форма для отправки новых результатов
-- **Регистрация игрока** — создание новых игроков
-- **Управление играми** — добавление и просмотр игр
-
-## Требования к коду
-
-- Все комментарии на русском языке
-- Каждый файл начинается с описания назначения
-- Соблюдение зависимостей Clean Architecture
-- Использование dependency injection
-
-## Примеры использования API
-
-### Регистрация игрока
+### Запуск тестов
 
 ```bash
-curl -X POST http://localhost:8000/api/players \
-  -H "Content-Type: application/json" \
-  -d '{"username": "new_player"}'
+# Запуск всех тестов
+pytest
+
+# Запуск с покрытием кода
+pytest --cov=. --cov-report=html
+
+# Запуск определённой группы тестов
+pytest tests/entities/          # Тесты сущностей
+pytest tests/use_cases/          # Тесты бизнес-логики
+pytest tests/adapters/           # Тесты API
+pytest tests/infrastructure/      # Тесты инфраструктуры
 ```
 
-### Отправка результата
+### Тестовые маркеры
 
-```bash
-curl -X POST http://localhost:8000/api/scores \
-  -H "Content-Type: application/json" \
-  -d '{"player_id": 1, "game_id": 1, "value": 5000}'
-```
+- `unit` — Юнит-тесты (изолированные, без внешних зависимостей)
+- `integration` — Интеграционные тесты (с базой данных)
+- `api` — API тесты (HTTP эндпоинты)
 
-### Получение лидерборда
+### Структура тестов
 
-```bash
-curl http://localhost:8000/api/leaderboard/1
-```
+Тесты организованы по слоям архитектуры:
 
-## Лицензия
+| Уровень | Директория | Описание |
+|---------|------------|-----------|
+| Entities | `tests/entities/` | Тесты бизнес-сущностей (Player, Game, Score) |
+| Use Cases | `tests/use_cases/` | Тесты бизнес-логики |
+| Adapters | `tests/adapters/controllers/` | Тесты REST API контроллеров |
+| Infrastructure | `tests/infrastructure/` | Тесты репозиториев и базы данных |
 
-MIT License
+### Конфигурация
+
+- **conftest.py** — Общие фикстуры для всех тестов
+- **pytest.ini** — Конфигурация pytest с маркерами и путями
