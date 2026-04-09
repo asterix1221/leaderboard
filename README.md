@@ -90,8 +90,8 @@ leaderboard/
 1. Клонируйте репозиторий:
 
 ```bash
-git clone <repository-url>
-cd leaderboard
+git clone https://github.com/asterix1221/leaderboard
+cd kursach5
 ```
 
 1. Установите зависимости:
